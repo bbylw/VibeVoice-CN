@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VibeVoice — 开源前沿语音 AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0a0b0f;
+  --bg-card: #12141a;
+  --bg-card-hover: #191c24;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text-primary: #e8e6e1;
+  --text-secondary: #8a8a8e;
+  --text-muted: #555;
+  --accent-blue: #4a9eff;
+  --accent-orange: #e8804a;
+  --accent-green: #5cb87a;
+  --accent-purple: #9b7aed;
+  --accent-red: #e85a5a;
+  --radius-lg: 1.5rem;
+  --radius-md: 1rem;
+  --radius-sm: 0.5rem;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Space Grotesk', 'Noto Sans SC', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.container {
+  max-w: 1400px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 1rem 2rem;
+  backdrop-filter: blur(20px) saturate(1.4);
+  background: rgba(10,11,15,0.7);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.3s;
+}
+
+nav .nav-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+nav .logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.03em;
+}
+
+nav .logo svg { width: 28px; height: 28px; }
+
+nav .nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+nav .nav-links a {
+  color: var(--text-secondary);
+  transition: color 0.2s;
+  position: relative;
+}
+
+nav .nav-links a:hover { color: var(--text-primary); }
+
+nav .nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent-blue);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+nav .nav-links a:hover::after { width: 100%; }
+
+nav .nav-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-ghost {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-ghost:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.03);
+}
+
+.btn-primary {
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: var(--accent-blue);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: #5ca8ff;
+  transform: translateY(-1px);
+}
+
+/* ─── HERO ─── */
+.hero {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  padding: 8rem 2rem 4rem;
+}
+
+.hero-glow {
+  position: absolute;
+  width: 700px;
+  height: 700px;
+  border-radius: 50%;
+  filter: blur(160px);
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.hero-glow-1 {
+  top: 10%;
+  left: 20%;
+  background: var(--accent-blue);
+}
+
+.hero-glow-2 {
+  top: 30%;
+  right: 15%;
+  background: var(--accent-purple);
+  width: 500px;
+  height: 500px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  border-radius: 2rem;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.hero h1 {
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.8s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero h1 .gradient-text {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero .subtitle {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.8;
+  font-weight: 300;
+  animation: fadeUp 0.8s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 4rem;
+  animation: fadeUp 0.8s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-btn {
+  padding: 0.875rem 2rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hero-btn-fill {
+  background: var(--accent-blue);
+  border: none;
+  color: #fff;
+}
+
+.hero-btn-fill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(74,158,255,0.3);
+}
+
+.hero-btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.hero-btn-outline:hover {
+  border-color: var(--border-hover);
+  background: rgba(255,255,255,0.03);
+}
+
+.hero-stats {
+  display: flex;
+  gap: 3rem;
+  animation: fadeUp 0.8s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-stat {
+  text-align: center;
+}
+
+.hero-stat .num {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.hero-stat .label {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── SECTION ─── */
+section {
+  padding: 6rem 0;
+}
+
+.section-header {
+  margin-bottom: 4rem;
+}
+
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-blue);
+  margin-bottom: 1rem;
+}
+
+.section-label::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: var(--accent-blue);
+}
+
+.section-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  max-width: 700px;
+}
+
+.section-desc {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin-top: 1rem;
+  line-height: 1.8;
+}
+
+/* ─── OVERVIEW ─── */
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.overview-card {
+  padding: 2.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.overview-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+}
+
+.overview-card:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  transform: translateY(-3px);
+}
+
+.overview-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.overview-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+}
+
+.overview-card p {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+/* ─── MODEL CARDS ─── */
+.model-section {
+  padding: 6rem 0;
+}
+
+.model-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  overflow: hidden;
+  margin-bottom: 3rem;
+  transition: border-color 0.3s;
+}
+
+.model-card:hover {
+  border-color: var(--border-hover);
+}
+
+.model-header {
+  padding: 2.5rem 3rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.model-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.3rem 0.75rem;
+  border-radius: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.model-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.model-header .desc {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+.model-links {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-top: 0.5rem;
+}
+
+.model-link {
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.model-link:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.03);
+}
+
+.model-features {
+  padding: 2.5rem 3rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 2rem;
+}
+
+.feature {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.feature-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.feature h4 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.feature p {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Color accents */
+.accent-blue { background: rgba(74,158,255,0.1); color: var(--accent-blue); }
+.accent-orange { background: rgba(232,128,74,0.1); color: var(--accent-orange); }
+.accent-green { background: rgba(92,184,122,0.1); color: var(--accent-green); }
+.accent-purple { background: rgba(155,122,237,0.1); color: var(--accent-purple); }
+.accent-red { background: rgba(232,90,90,0.1); color: var(--accent-red); }
+
+/* ─── TECH SECTION ─── */
+.tech-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  margin-top: 3rem;
+}
+
+.tech-visual {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.tech-visual::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(74,158,255,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.tech-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.tech-step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+  transition: all 0.3s;
+}
+
+.tech-step:hover {
+  border-color: var(--border-hover);
+  background: rgba(255,255,255,0.04);
+}
+
+.tech-step-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: rgba(74,158,255,0.1);
+  color: var(--accent-blue);
+  flex-shrink: 0;
+}
+
+.tech-step-text {
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.tech-step-text span {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  margin-top: 0.15rem;
+}
+
+.tech-points {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.tech-point {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.tech-point-marker {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  flex-shrink: 0;
+  margin-top: 0.5rem;
+}
+
+.tech-point h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.tech-point p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ─── NEWS ─── */
+.news-timeline {
+  position: relative;
+  margin-top: 3rem;
+}
+
+.news-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--accent-blue), transparent);
+}
+
+.news-item {
+  padding-left: 2.5rem;
+  padding-bottom: 2.5rem;
+  position: relative;
+}
+
+.news-item::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--bg-deep);
+  border: 2px solid var(--accent-blue);
+}
+
+.news-item:first-child::before {
+  background: var(--accent-blue);
+  box-shadow: 0 0 12px rgba(74,158,255,0.4);
+}
+
+.news-date {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.news-item h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.news-item p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 650px;
+}
+
+/* ─── TABLE ─── */
+.model-table {
+  margin-top: 3rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.model-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.model-table th {
+  text-align: left;
+  padding: 1rem 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--border);
+}
+
+.model-table td {
+  padding: 1rem 1.5rem;
+  font-size: 0.9375rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.model-table tr:last-child td {
+  border-bottom: none;
+}
+
+.model-table tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+.table-link {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.table-link:hover { opacity: 0.8; }
+
+.table-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* ─── FOOTER ─── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 3rem 0;
+  margin-top: 4rem;
+}
+
+.footer-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.footer-left span {
+  color: var(--text-secondary);
+  font-weight: 400;
+  font-size: 0.8125rem;
+  margin-left: 0.5rem;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+}
+
+.footer-links a {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover { color: var(--text-primary); }
+
+/* ─── SCROLL REVEAL ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .container { padding: 0 1.25rem; }
+
+  nav .nav-links { display: none; }
+
+  .hero { padding: 7rem 1.25rem 3rem; }
+
+  .hero-stats { gap: 1.5rem; }
+
+  .hero-actions { flex-direction: column; width: 100%; }
+  .hero-btn { justify-content: center; }
+
+  .overview-grid { grid-template-columns: 1fr; }
+
+  .model-header { flex-direction: column; padding: 2rem; }
+  .model-features { padding: 2rem; grid-template-columns: 1fr; }
+  .model-links { flex-wrap: wrap; }
+
+  .tech-content { grid-template-columns: 1fr; gap: 2rem; }
+
+  .footer-inner { flex-direction: column; gap: 1.5rem; text-align: center; }
+  .footer-links { flex-wrap: wrap; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1.5"/><path d="M9 17l3-8h1l3 8M10 14h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      VibeVoice
+    </a>
+    <ul class="nav-links">
+      <li><a href="#overview">概述</a></li>
+      <li><a href="#models">模型</a></li>
+      <li><a href="#tech">技术</a></li>
+      <li><a href="#news">动态</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="https://huggingface.co/collections/microsoft/vibevoice-68a2ef24a875c44be47b034f" target="_blank" class="btn-ghost">🤗 Hugging Face</a>
+      <a href="https://github.com/microsoft/VibeVoice" target="_blank" class="btn-primary">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow hero-glow-1"></div>
+  <div class="hero-glow hero-glow-2"></div>
+
+  <div class="hero-badge">
+    <span class="dot"></span>
+    微软开源 · 前沿语音 AI 模型
+  </div>
+
+  <h1>
+    <span class="gradient-text">VibeVoice</span><br>
+    开源前沿语音 AI
+  </h1>
+
+  <p class="subtitle">
+    涵盖文本转语音（TTS）和自动语音识别（ASR），以超低帧率 7.5 Hz 连续语音分词器为核心，实现高效长序列处理与高保真音频生成。
+  </p>
+
+  <div class="hero-actions">
+    <a href="https://microsoft.github.io/VibeVoice" target="_blank" class="hero-btn hero-btn-fill">
+      🚀 访问项目主页
+    </a>
+    <a href="https://arxiv.org/pdf/2508.19205" target="_blank" class="hero-btn hero-btn-outline">
+      📄 阅读技术报告
+    </a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="num">60 min</div>
+      <div class="label">单次处理时长</div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">7.5 Hz</div>
+      <div class="label">超低帧率分词</div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">50+</div>
+      <div class="label">支持语言数</div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">4</div>
+      <div class="label">多说话人</div>
+    </div>
+  </div>
+</section>
+
+<!-- OVERVIEW -->
+<section id="overview">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">概述</div>
+      <h2 class="section-title">一系列开源前沿语音 AI 模型</h2>
+      <p class="section-desc">VibeVoice 采用下一 token 扩散框架，利用大语言模型理解文本上下文和对话流程，使用扩散头生成高保真声学细节。</p>
+    </div>
+
+    <div class="overview-grid">
+      <div class="overview-card reveal">
+        <div class="overview-icon accent-blue">🎙️</div>
+        <h3>连续语音分词器</h3>
+        <p>包含声学分词器和语义分词器，以超低帧率 7.5 Hz 运行，高效保留音频保真度的同时显著提升长序列计算效率。</p>
+      </div>
+      <div class="overview-card reveal">
+        <div class="overview-icon accent-purple">🧠</div>
+        <h3>下一 Token 扩散</h3>
+        <p>利用大语言模型（LLM）理解文本上下文和对话流程，并使用扩散头生成高保真的声学细节。</p>
+      </div>
+      <div class="overview-card reveal">
+        <div class="overview-icon accent-orange">⚡</div>
+        <h3>长序列处理能力</h3>
+        <p>ASR 可在单次处理中接收长达 60 分钟的音频，TTS 可生成长达 90 分钟的语音，保持全局上下文和说话人一致性。</p>
+      </div>
+      <div class="overview-card reveal">
+        <div class="overview-icon accent-green">🌐</div>
+        <h3>多语言原生支持</h3>
+        <p>ASR 原生支持 50 多种语言，TTS 支持英语、中文等多种语言，具备跨语言能力。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODELS -->
+<section id="models" class="model-section">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">模型</div>
+      <h2 class="section-title">三大核心模型</h2>
+      <p class="section-desc">覆盖语音识别、语音合成与实时流式推理全场景</p>
+    </div>
+
+    <!-- ASR -->
+    <div class="model-card reveal">
+      <div class="model-header">
+        <div>
+          <div class="model-tag accent-blue">ASR · 语音识别</div>
+          <h3>VibeVoice-ASR-7B</h3>
+          <p class="desc">统一的语音转文本模型，可在单次处理中处理长达 60 分钟的长音频，生成包含说话人、时间戳和内容的结构化转录。</p>
+        </div>
+        <div class="model-links">
+          <a href="https://huggingface.co/microsoft/VibeVoice-ASR" target="_blank" class="model-link">🤗 模型权重</a>
+          <a href="https://aka.ms/vibevoice-asr" target="_blank" class="model-link">🎮 在线体验</a>
+          <a href="https://arxiv.org/pdf/2601.18184" target="_blank" class="model-link">📊 论文</a>
+        </div>
+      </div>
+      <div class="model-features">
+        <div class="feature">
+          <div class="feature-icon accent-blue">🕒</div>
+          <div>
+            <h4>60 分钟单次处理</h4>
+            <p>在 64K token 长度内接收连续音频，确保一致的说话人追踪和语义连贯性</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon accent-orange">👤</div>
+          <div>
+            <h4>自定义热词</h4>
+            <p>提供特定名称、专业术语或背景信息来引导识别过程，提高领域特定内容准确性</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon accent-green">📝</div>
+          <div>
+            <h4>丰富转录输出</h4>
+            <p>同时执行 ASR、说话人分离和时间戳标注，生成谁、何时、说了什么的结构化输出</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TTS -->
+    <div class="model-card reveal">
+      <div class="model-header">
+        <div>
+          <div class="model-tag accent-orange">TTS · 语音合成</div>
+          <h3>VibeVoice-TTS-1.5B</h3>
+          <p class="desc">长文本多说话人文本转语音模型，可合成长达 90 分钟、最多 4 个不同说话人的高质量语音。</p>
+        </div>
+        <div class="model-links">
+          <a href="https://huggingface.co/microsoft/VibeVoice-1.5B" target="_blank" class="model-link">🤗 模型权重</a>
+          <a href="https://arxiv.org/pdf/2508.19205" target="_blank" class="model-link">📊 论文</a>
+        </div>
+      </div>
+      <div class="model-features">
+        <div class="feature">
+          <div class="feature-icon accent-orange">⏱️</div>
+          <div>
+            <h4>90 分钟长文本生成</h4>
+            <p>在单次处理中合成长达 90 分钟的对话或单人语音，保持全程一致性</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon accent-purple">👥</div>
+          <div>
+            <h4>多说话人支持</h4>
+            <p>在单次对话中支持最多 4 个不同说话人，具有自然的轮替和说话人一致性</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon accent-green">🎭</div>
+          <div>
+            <h4>富有表现力的语音</h4>
+            <p>生成自然逼真的语音，捕捉对话动态和情感细微差别</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Streaming -->
+    <div class="model-card reveal">
+      <div class="model-header">
+        <div>
+          <div class="model-tag accent-green">Streaming · 流式推理</div>
+          <h3>VibeVoice-Realtime-0.5B</h3>
+          <p class="desc">轻量级实时文本转语音模型，支持流式文本输入和鲁棒的长文本语音生成。</p>
+        </div>
+        <div class="model-links">
+          <a href="https://huggingface.co/microsoft/VibeVoice-Realtime-0.5B" target="_blank" class="model-link">🤗 模型权重</a>
+          <a href="https://colab.research.google.com/github/microsoft/VibeVoice/blob/main/demo/vibevoice_realtime_colab.ipynb" target="_blank" class="model-link">🚀 Colab</a>
+        </div>
+      </div>
+      <div class="model-features">
+        <div class="feature">
+          <div class="feature-icon accent-green">⚡</div>
+          <div>
+            <h4>0.5B 参数量</h4>
+            <p>轻量级模型，便于部署，首次可听延迟约 300 毫秒</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon accent-blue">📡</div>
+          <div>
+            <h4>流式文本输入</h4>
+            <p>支持实时流式文本输入，适用于交互式对话场景</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon accent-purple">📏</div>
+          <div>
+            <h4>长文本支持</h4>
+            <p>鲁棒的长文本语音生成能力，支持约 10 分钟连续语音</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="model-table reveal">
+      <table>
+        <thead>
+          <tr>
+            <th>模型</th>
+            <th>权重</th>
+            <th>快速体验</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>VibeVoice-ASR-7B</strong></td>
+            <td><a href="https://huggingface.co/microsoft/VibeVoice-ASR" target="_blank" class="table-link">HF 链接 ↗</a></td>
+            <td><a href="https://aka.ms/vibevoice-asr" target="_blank" class="table-link">在线体验 ↗</a></td>
+          </tr>
+          <tr>
+            <td><strong>VibeVoice-TTS-1.5B</strong></td>
+            <td><a href="https://huggingface.co/microsoft/VibeVoice-1.5B" target="_blank" class="table-link">HF 链接 ↗</a></td>
+            <td><span class="table-badge accent-red">已禁用</span></td>
+          </tr>
+          <tr>
+            <td><strong>VibeVoice-Realtime-0.5B</strong></td>
+            <td><a href="https://huggingface.co/microsoft/VibeVoice-Realtime-0.5B" target="_blank" class="table-link">HF 链接 ↗</a></td>
+            <td><a href="https://colab.research.google.com/github/microsoft/VibeVoice/blob/main/demo/vibevoice_realtime_colab.ipynb" target="_blank" class="table-link">Colab ↗</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- TECH -->
+<section id="tech">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">技术</div>
+      <h2 class="section-title">核心技术架构</h2>
+      <p class="section-desc">基于连续语音分词器与下一 token 扩散框架的创新架构</p>
+    </div>
+
+    <div class="tech-content">
+      <div class="tech-visual reveal">
+        <div class="tech-flow">
+          <div class="tech-step">
+            <div class="tech-step-num">1</div>
+            <div class="tech-step-text">
+              音频输入
+              <span>原始音频或文本内容</span>
+            </div>
+          </div>
+          <div class="tech-step">
+            <div class="tech-step-num">2</div>
+            <div class="tech-step-text">
+              连续语音分词器
+              <span>声学分词器 + 语义分词器 @ 7.5 Hz</span>
+            </div>
+          </div>
+          <div class="tech-step">
+            <div class="tech-step-num">3</div>
+            <div class="tech-step-text">
+              大语言模型（LLM）
+              <span>理解文本上下文和对话流程</span>
+            </div>
+          </div>
+          <div class="tech-step">
+            <div class="tech-step-num">4</div>
+            <div class="tech-step-text">
+              扩散头
+              <span>生成高保真声学细节</span>
+            </div>
+          </div>
+          <div class="tech-step">
+            <div class="tech-step-num">5</div>
+            <div class="tech-step-text">
+              输出
+              <span>高质量语音 / 结构化转录</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tech-points reveal">
+        <div class="tech-point">
+          <div class="tech-point-marker"></div>
+          <div>
+            <h4>超低帧率分词</h4>
+            <p>以 7.5 Hz 的超低帧率运行连续语音分词器，在保留音频保真度的同时大幅降低计算开销，使长达 60 分钟的音频处理成为可能。</p>
+          </div>
+        </div>
+        <div class="tech-point">
+          <div class="tech-point-marker" style="background: var(--accent-purple);"></div>
+          <div>
+            <h4>下一 Token 扩散框架</h4>
+            <p>结合 LLM 的文本理解能力和扩散模型的生成能力，在 token 级别实现高保真的声学细节生成。</p>
+          </div>
+        </div>
+        <div class="tech-point">
+          <div class="tech-point-marker" style="background: var(--accent-orange);"></div>
+          <div>
+            <h4>统一架构设计</h4>
+            <p>ASR 和 TTS 共享核心架构理念，实现了语音转文本与文本转语音的双向高质量处理。</p>
+          </div>
+        </div>
+        <div class="tech-point">
+          <div class="tech-point-marker" style="background: var(--accent-green);"></div>
+          <div>
+            <h4>Transformers 集成</h4>
+            <p>VibeVoice ASR 已纳入 Hugging Face Transformers 正式发布版，可通过标准 API 直接调用和集成。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWS -->
+<section id="news">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">动态</div>
+      <h2 class="section-title">最新动态</h2>
+    </div>
+
+    <div class="news-timeline reveal">
+      <div class="news-item">
+        <div class="news-date">2026-03-06</div>
+        <h4>🚀 VibeVoice ASR 纳入 Transformers 正式版</h4>
+        <p>现在可以通过 Hugging Face Transformers 库直接使用语音识别模型，轻松集成到项目中。</p>
+      </div>
+      <div class="news-item">
+        <div class="news-date">2026-01-21</div>
+        <h4>📣 开源 VibeVoice-ASR</h4>
+        <p>统一的语音转文本模型，支持 60 分钟长音频、结构化转录、50+ 语言、vLLM 推理加速，并发布微调代码和技术报告。</p>
+      </div>
+      <div class="news-item">
+        <div class="news-date">2025-12-16</div>
+        <h4>🎙️ 新增实验性语音角色</h4>
+        <p>为 VibeVoice-Realtime-0.5B 新增九种语言的多语言语音以及 11 种不同风格的英语语音。</p>
+      </div>
+      <div class="news-item">
+        <div class="news-date">2025-12-03</div>
+        <h4>⚡ 开源 VibeVoice-Realtime-0.5B</h4>
+        <p>轻量级实时 TTS 模型，支持流式文本输入和鲁棒的长文本语音生成。</p>
+      </div>
+      <div class="news-item">
+        <div class="news-date">2025-08-25</div>
+        <h4>🎤 开源 VibeVoice-TTS</h4>
+        <p>长文本多说话人 TTS 模型，可合成长达 90 分钟、最多 4 个不同说话人的语音。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WARNING -->
+<section>
+  <div class="container">
+    <div class="overview-card reveal" style="border-color: rgba(232,90,90,0.2); background: rgba(232,90,90,0.03);">
+      <div class="overview-icon accent-red">⚠️</div>
+      <h3>风险与局限性</h3>
+      <p>模型可能产生意外的、有偏见的或不准确的输出。高质量合成语音可能被滥用于创建虚假音频内容。用户须以合法方式使用，完全遵守相关法律法规。本模型仅供研究和开发用途，不建议在未经测试的情况下用于商业应用。</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">
+      🎙️ VibeVoice
+      <span>· 微软开源 · 仅供研究用途</span>
+    </div>
+    <ul class="footer-links">
+      <li><a href="https://github.com/microsoft/VibeVoice" target="_blank">GitHub</a></li>
+      <li><a href="https://huggingface.co/collections/microsoft/vibevoice-68a2ef24a875c44be47b034f" target="_blank">Hugging Face</a></li>
+      <li><a href="https://microsoft.github.io/VibeVoice" target="_blank">项目主页</a></li>
+      <li><a href="https://arxiv.org/pdf/2508.19205" target="_blank">TTS 论文</a></li>
+      <li><a href="https://arxiv.org/pdf/2601.18184" target="_blank">ASR 论文</a></li>
+      <li><a href="https://aka.ms/vibevoice-asr" target="_blank">在线体验</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Nav background on scroll
+const nav = document.querySelector('nav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 50) {
+    nav.style.background = 'rgba(10,11,15,0.92)';
+  } else {
+    nav.style.background = 'rgba(10,11,15,0.7)';
+  }
+}, { passive: true });
+</script>
+
+</body>
+</html>

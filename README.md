@@ -1,5 +1,7 @@
 <div align="center">
 
+> 📌 本文档汉化自 [microsoft/VibeVoice](https://github.com/microsoft/VibeVoice)
+
 ## 🎙️ VibeVoice：开源前沿语音 AI
 [![项目主页](https://img.shields.io/badge/项目-主页-blue?logo=githubpages)](https://microsoft.github.io/VibeVoice)
 [![Hugging Face](https://img.shields.io/badge/HuggingFace-合集-orange?logo=huggingface)](https://huggingface.co/collections/microsoft/vibevoice-68a2ef24a875c44be47b034f)
